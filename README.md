@@ -39,52 +39,6 @@ images sent by the user through the requests and the Output bucket stores the cl
 of the corresponding image.
 
 
-2.2 Autoscaling
-In this project our aim was to use one of the most important characteristics of Cloud Computing
-ie. Autoscaling. As per the design and architecture mentioned above, we need to create and
-terminate instances based on the input image/requests. So if the number of requests increases,
-we increase the number of instances and decrease the number of instances when the number
-of requests decreases.
-
-1) First step is getting the number of requests that are present in the input queue. This is done
-by using the parameters
-‘ApproximateNumberOfMessages’,‘ApproximateNumberOfMessagesNotVisible’,‘ApproximateN
-umberOfMessagesDelayed’. The sum of the two parameters will give us the size of the queue.
-
-2) Next step is to retrieve the number of instances that are in running or pending state. We can
-use the Instances Filters command, we can filter the instances using the Application Tier name
-and providing the states: running and pending. This will give us the count of instances(number
-of instances in pending or running state), which are running or about to run.
-
-3) The current variable contains the number of instances that are currently running. This will
-also help us in determining creation and termination of instances, as number of instances
-should not exceed 19 as we are only permitted to use 20 instances.
-
-4) Scaling Out:
-From step 2 we already have the number of instances in running/pending state. To estimate the
-number of instances needed to process the queue we used the ceiling value of (queue_size/2).
-If the number of instances needed is greater than the number of instances in running/pending
-state, it means we scale out i.e. create more instances. Also at the same time we have to keep
-a track the number of instances are not more than 19 , which can be achieved the using the
-current value in step 3
-The current variable is then increased by 1.
-
-5) Scaling In:
-To estimate the number of instances needed to process the queue we used the ceiling value of
-(queue_size/10).
-In order to ensure that the termination of instances only occurs when the required number of
-instances remains constant for an extended period of time, we additionally utilize a counter. To
-prevent the deletion from occurring unintentionally, this is done. If the queue fluctuates,
-instances might be generated right away, but by the time they're produced, the queue size will
-have shrunk and the deletion process will have begun.
-If the number of instances of needed is less than the number of instances in running/pending
-state, it means we scale in ie terminate the instances as the demand has reduced. The no of
-instances to be terminated is calculated as the absolute difference between the number of
-instances needed to process the queue and number of instances in running/pending state.
-The current variable is then decreased by 1.
-For both scaling in and out operations, we have used the boto3 python library.
-
-
 Code description:
 
 appTier.py ( Web Tier):
